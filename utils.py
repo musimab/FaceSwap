@@ -1,6 +1,11 @@
 import dlib
 import cv2
+from matplotlib import image
 import numpy as np
+import mediapipe as mp
+ 
+mp_face_mesh = mp.solutions.face_mesh
+face_mesh = mp_face_mesh.FaceMesh()
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
@@ -26,7 +31,6 @@ def adjustColorToneofFace(img2_gray, img2, img2_new_face, landmark_points2 ):
     img2_head_mask = cv2.fillConvexPoly(img2_face_mask, convexhull2, 255)
     img2_face_mask = cv2.bitwise_not(img2_head_mask)
 
-
     img2_head_noface = cv2.bitwise_and(img2, img2, mask=img2_face_mask)
     result = cv2.add(img2_head_noface, img2_new_face)
 
@@ -49,10 +53,31 @@ def getFacelandmarks(image_gray):
                 x = landmarks.part(n).x
                 y = landmarks.part(n).y
                 landmarks_points.append((x, y))
+                #print("landmark points2:", len(landmarks_points))
                 cv2.circle(image_gray, (x, y), 3, (0, 0, 255), -1)
 
         return landmarks_points
     
+    return None
+
+
+def getFacelandmarks468(image):
+    
+    height, width,channel = image.shape
+    with mp_face_mesh.FaceMesh(min_detection_confidence= 0.5,
+                            min_tracking_confidence= 0.5) as face_mesh:
+        results = face_mesh.process(image)
+
+        if results.multi_face_landmarks:
+            for face_landmarks in results.multi_face_landmarks:
+                landmark_points = []
+                for i in range(0, 468):  
+                    landmrk = face_landmarks.landmark[i]
+                    locx = int(landmrk.x * width)
+                    locy = int(landmrk.y * height)
+                    landmark_points.append((locx, locy))
+            return landmark_points
+
     return None
 
 
@@ -80,11 +105,6 @@ def delaunayTriangulation(landmark_points):
     return triangle_points
 
 
-def extractIndexNparray(nparray):
-
-    return nparray[0][0]
-
-
 def getTriangleIndex(triangle_points, landmark_points):
     landmark_points = np.array(landmark_points, np.int32)
     indexes_triangles = []
@@ -94,16 +114,13 @@ def getTriangleIndex(triangle_points, landmark_points):
         pt3 = (t[4], t[5])
 
         index_pt1 = np.where((landmark_points == pt1).all(axis=1))
-        index_pt1 = extractIndexNparray(index_pt1)
 
         index_pt2 = np.where((landmark_points == pt2).all(axis=1))
-        index_pt2 = extractIndexNparray(index_pt2)
 
         index_pt3 = np.where((landmark_points == pt3).all(axis=1))
-        index_pt3 = extractIndexNparray(index_pt3)
 
-        if index_pt1 is not None and index_pt2 is not None and index_pt3 is not None:
-            triangle = [index_pt1, index_pt2, index_pt3]
+        if index_pt1[0][0] is not None and index_pt2[0][0] is not None and index_pt3[0][0] is not None:
+            triangle = [index_pt1[0][0], index_pt2[0][0], index_pt3[0][0]]
             indexes_triangles.append(triangle)
     
     return  indexes_triangles
