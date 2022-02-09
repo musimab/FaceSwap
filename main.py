@@ -61,7 +61,7 @@ def swapFaces(indexes_triangles, landmarks_points,landmarks_points2, img ,img2_n
 
 def main():
     
-    img = cv2.imread("bradley_cooper.jpg")
+    img = cv2.imread("jim_carrey.jpg")
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
    
     cap = cv2.VideoCapture(0)
@@ -85,18 +85,19 @@ def main():
             swapped_new_face = np.zeros_like(img2)
              
             landmark_points2 = getFacelandmarks468(img2)
-                    
-            swapped_new_face = swapFaces(indexes_triangles, landmark_points,
-                                                            landmark_points2, img, swapped_new_face )
-            if swapped_new_face is not None:
+            if (landmark_points2 is not None):
 
-                seamlessclone = adjustColorToneofFace(img2_gray, img2, swapped_new_face, landmark_points2 )
-                    
-                cv2.imshow("face swap", seamlessclone )
-                key = cv2.waitKey(1)
-                if key & 0xFF == ord('q') or key == 27:
-                    cv2.destroyAllWindows()
-                    break
+                swapped_new_face = swapFaces(indexes_triangles, landmark_points,
+                                                                landmark_points2, img, swapped_new_face )
+                if swapped_new_face is not None:
+
+                    seamlessclone = adjustColorToneofFace(img2_gray, img2, swapped_new_face, landmark_points2 )
+                        
+                    cv2.imshow("face swap", seamlessclone )
+                    key = cv2.waitKey(1)
+                    if key & 0xFF == ord('q') or key == 27:
+                        cv2.destroyAllWindows()
+                        break
 
         cap.release()
 
